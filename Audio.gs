@@ -50,24 +50,17 @@ const Audio = ( () => {
   }
 
   // Returns the audio content generated from the input text.
+  // Logic derived from GitHub example:
+  // https://github.com/Tyamamoto1007/GoogleAppsScript_cloudText-to-Speech_template 
   function _getAudioContent(inputSource, speechText) {  // text or ssml
-     // Logic derived from GitHub example:
-     // https://github.com/Tyamamoto1007/GoogleAppsScript_cloudText-to-Speech_template 
-    const json = {
-      "audioConfig": {
-        "audioEncoding": "MP3",
-        "pitch": "0.00",
-        "speakingRate": "0.70"
-      },
-      "input": {
-        [inputSource] : speechText
-      },
-      "voice": {
-        "languageCode": "en-US",
-        "name": "en-US-Standard-C"
-      } 
-    }
-    
+    const Input = {
+      input: {
+          [inputSource] : speechText
+        },
+    };
+
+    // Construct the audio configuration from the Helper settings and the input parameters.
+    const json = Object.assign({}, Helper.AudioConfig, Input);
     const payload = JSON.stringify(json);
     // Call Text-to-Speech API. See
     // https://cloud.google.com/text-to-speech/docs/reference/rest/v1beta1/text/synthesize
@@ -100,9 +93,8 @@ const Audio = ( () => {
   // Transform inbound text for audio output via SSML.
   function _getSSMLBody(text) {
     // Manipulate various components of the text with SSML tags. See:
-      // https://javascript.info/regexp-lookahead-lookbehind
-    var response = text.replace(/(?!\w)\.(?=\s+\w)/g, '. <break time="2s"/>'); // Pause between sentences
-      
+    // https://javascript.info/regexp-lookahead-lookbehind
+    var response = text.replace(/(?!\w)\.(?=\s+\w)/g, '. <break time="2s"/>'); // Pause between sentences      
     return response;
   }
 
