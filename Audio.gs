@@ -1,7 +1,7 @@
 // Handles generation of audio from text into an MP3 with metadata.
 const Audio = ( () => {
   // Returns an MP3 blob of audio content generated from the input text, tagged with appropriate metadata.
-  function getMP3Blob(text, audioFileName, title, album, artist) {
+  function getMP3Blob(text, audioFileName, metadata) {
     const requests = _getSSMLRequests(text);
 
     var audioContents = [];
@@ -26,7 +26,7 @@ const Audio = ( () => {
     // https://developers.google.com/apps-script/reference/utilities/utilities#base64Decode(String,Charset)
     const bytes = Utilities.base64Decode(data, Utilities.Charset.UTF_8);
     
-    const blob = Tagger.getTaggedBlob(bytes, audioFileName, title, album, artist);
+    const blob = Tagger.getTaggedBlob(bytes, audioFileName, metadata);
     Helper.log(`Tagger.getBlob bytes ${bytes.length}`, Helper.LOG_LEVEL.DEBUG);
     return blob;
   }
@@ -122,7 +122,6 @@ const Audio = ( () => {
       let subText = text.substring(startIndex, endIndex);
       
       // Handle for complete words or SSML tags
-      // TODO: Bug when there is a space within a tag
       for(var i = subText.length; i > 0; i--) {
         if (subText.charAt(i) === ">") {
           endIndex = i + startIndex;
@@ -147,16 +146,19 @@ const Audio = ( () => {
 
   // Wrapper handling ID3 logic within file.
   const Tagger = ( () => {
-    function getTaggedBlob(bytes, audioFileName, title, album, artist) {
+    function getTaggedBlob(bytes, audioFileName, metadata) {
       let buffer = getArrayBuffer(bytes);
-      Helper.log(`Title: ${title}; Album: ${album}; Bytes: ${buffer.byteLength}`, Helper.LOG_LEVEL.DEBUG);
+      Helper.log(`Metadata: ${metadata}; Bytes: ${buffer.byteLength}`, Helper.LOG_LEVEL.DEBUG);
       const writer = new ID3Writer(buffer);
       writer.removeTag();
-      writer.setFrame('TIT2', title)
-        .setFrame('TPE1', [artist])
-        .setFrame('TALB', album)
-        .setFrame('TYER', new Date().getFullYear())
-        .setFrame('TCON', ['Spoken']);
+
+      if (metadata.title != undefined)     writer.setFrame('TIT2', metadata.title);
+      if (metadata.album != undefined)     writer.setFrame('TALB', metadata.album);
+      if (metadata.artists != undefined)   writer.setFrame('TPE1', metadata.artists);
+      if (metadata.composers != undefined) writer.setFrame('TCOM', metadata.composers);
+      if (metadata.genres != undefined)    writer.setFrame('TCON', metadata.genres);
+      if (metadata.year != undefined)      writer.setFrame('TYER', metadata.year);
+
       writer.addTag();
 
       let taggedBytes = new Uint8Array(writer.arrayBuffer);

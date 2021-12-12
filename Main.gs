@@ -42,6 +42,32 @@ const Workspace = ( () => {
     }
   }
 
+  // Creates an audio file from the input document
+  function generateMP3ForDoc(docFileId) {
+    const text = _getDocText(docFileId);
+    const docFile = DriveApp.getFileById(docFileId);
+
+    const audioFileName = docFile.getName() + ".mp3";
+    // Define the audio file metadata
+    const metadata = {
+      title: docFile.getName(),
+      album: _getTopFolder(docFileId).getName(),
+      artists: [docFile.getOwner().getName()],
+      composers: [docFile.getOwner().getName()],
+      genres: ["Spoken"],
+      year: docFile.getLastUpdated().getFullYear(),
+    };
+
+    const blob = Audio.getMP3Blob(text, audioFileName, metadata);
+
+    // Delete previous audio file if it exists
+    var audioFileId = _getAudioFileId(docFileId);
+    if (audioFileId != null) {DriveApp.getFileById(audioFileId).setTrashed(true)};
+
+    // Create new audio file
+    DriveApp.getFolderById(_getFolder(docFileId).getId()).createFile(blob);
+  }
+
   function _getFolder(fileId) {
     var folder;
     var folders = DriveApp.getFileById(fileId).getParents();
@@ -67,25 +93,6 @@ const Workspace = ( () => {
       }
 
       return audioFileId;
-  }
-
-  function generateMP3ForDoc(docFileId) {
-    const text = _getDocText(docFileId);
-    const docFileName = DriveApp.getFileById(docFileId).getName();
-
-    const audioFileName = docFileName + ".mp3";
-    const title = docFileName; 
-    const album = _getTopFolder(docFileId).getName();
-    const artist = DriveApp.getFileById(docFileId).getOwner().getName();
-
-    const blob = Audio.getMP3Blob(text,audioFileName, title, album, artist);
-
-    // Delete previous audio file if it exists
-    var audioFileId = _getAudioFileId(docFileId);
-    if (audioFileId != null) {DriveApp.getFileById(audioFileId).setTrashed(true)};
-
-    // Create new audio file
-    DriveApp.getFolderById(_getFolder(docFileId).getId()).createFile(blob);
   }
 
   // Gets the text of the document body (not the header or footer)
