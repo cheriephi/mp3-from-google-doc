@@ -7,7 +7,7 @@ const Audio = ( () => {
     var audioContents = [];
     requests.forEach(
       request => {
-        const audioContent = _getAudioContent("ssml", request);
+        const audioContent = _getAudioContent(request);
         audioContents.push(audioContent);
         }
       );
@@ -52,7 +52,10 @@ const Audio = ( () => {
   // Returns the audio content generated from the input text.
   // Logic derived from GitHub example:
   // https://github.com/Tyamamoto1007/GoogleAppsScript_cloudText-to-Speech_template 
-  function _getAudioContent(inputSource, speechText) {  // text or ssml
+  function _getAudioContent(speechText) {  // text or ssml
+    // Process the text as SSML or text depending upon if the text starts with the starting SSML tag.
+    const inputSource = (speechText.substring(0, 7) === "<speak>") ? "ssml" : "text";
+
     const Input = {
       input: {
           [inputSource] : speechText
