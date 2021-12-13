@@ -7,31 +7,45 @@
 
 // This logic has some custom configuration, such as wrapping text in SSML tags with specified wait times between questions,
 // but may be useful for any kind of text-to-speech logic, especially from Google Apps Script working with Google Docs.
+
+
+// Main method. Executes a Google Drive search criteria to find Google Doc files and generates MP3 audio files
+// using Text-To-Speech. Will delete the previous MP3 file if it exists.
 function generate() {
   // https://developers.google.com/drive/api/v3/search-files
   const query = "modifiedDate > '2021-12-10T12:00:00'"; // title contains = not modifiedDate > '2021-12-10T12:00:00'
   const requireMatchingAudio = true; // Only generate audios for documents that already have audios.
   const forceRegenerate = true; // Generate audios even if they are newer than the corresponding document.
 
-  Workspace.generateMP3ForDocs(query, requireMatchingAudio, forceRegenerate);
+  const files = Workspace.getFiles(query, requireMatchingAudio, forceRegenerate);
+  var stateManager = new StateManager();
+  var startIndex = stateManager.getStartIndex();
+  files.forEach((file, index) => {
+      // If resuming from incomplete run, continue until coming to current state.
+      if (index < startIndex ) { return; }
+      Helper.log(`Generating MP3 for ${file.getName()}`);
+      Workspace.generateMP3ForDoc(file.getId());
+      stateManager.incrementStartIndex();
+  });
+  stateManager.resetState();
 }
 
 const Workspace = ( () => {
-  function generateMP3ForDocs(query, requireMatchingAudio, forceRegenerate) {
+  // Returns the list of files to process based on the input criteria.
+  function getFiles(query, requireMatchingAudio, forceRegenerate) {
     const typeQuery = "mimeType = 'application/vnd.google-apps.document'";
     const docQuery = (query.length > 0) ? `${typeQuery} and ${query}` : typeQuery;
-    Helper.log(`generateMP3ForDocs docQuery ${docQuery}`, Helper.LOG_LEVEL.DEBUG);
+    Helper.log(`getFiles docQuery ${docQuery}`, Helper.LOG_LEVEL.DEBUG);
 
-    // Execute the search and sort the results.
-    var files = [];
-    var unSortedFiles = DriveApp.searchFiles(docQuery);
-    var files = _getSortedFiles(unSortedFiles);
-
+    // Execute the search filter the results.
     // Determine if the file matches the additional search criteria:
     //   * a matching audio if required
     //   * the audio be older than the document
-    for (let i = 0; i < files.length; ++i) {
-      let file = files[i];
+    var unSortedFiles = [];
+    var queryFiles = DriveApp.searchFiles(docQuery);
+    while (queryFiles.hasNext()) { 
+      let file = queryFiles.next();
+
       // Check for files without folders, this might be for shared files. We don't care about those.
       if (_getFolder(file.getId())=== undefined) {
         Helper.log(`generateMP3ForDocs file: ${file.getName()} does not have a folder, skipping`, Helper.LOG_LEVEL.DEBUG);
@@ -40,7 +54,7 @@ const Workspace = ( () => {
 
       if (requireMatchingAudio) {
         let audioFileId = _getAudioFileId(file.getId());
-        Helper.log(`generateMP3ForDocs audioFile found: ${!(audioFileId == null)}`, Helper.LOG_LEVEL.DEBUG)
+        Helper.log(`generateMP3ForDocs audioFile found: ${!(audioFileId === null)}`, Helper.LOG_LEVEL.DEBUG)
         if (audioFileId == null) continue;
 
         let fileLastUpdated = file.getLastUpdated();
@@ -49,9 +63,9 @@ const Workspace = ( () => {
         if (!forceRegenerate && file.getLastUpdated() < audioFileLastUpdated) break;
       }
 
-      Helper.log(`Generating MP3 for ${file.getName()}`);
-      generateMP3ForDoc(file.getId());
+      unSortedFiles.push(file); 
     }
+    return _getSortedFiles(unSortedFiles);
   }
 
   // Create an audio file from the input document.
@@ -91,12 +105,7 @@ const Workspace = ( () => {
 
   // Return an array of files sorted alphabetically by name.
   function _getSortedFiles(unSortedFiles) {
-    sortedFiles = [];
-    while (unSortedFiles.hasNext()) { 
-      sortedFiles.push(unSortedFiles.next()); 
-    }
-    // sorts the files array by file names alphabetically
-    sortedFiles = sortedFiles.sort(function(a, b){
+    let sortedFiles = unSortedFiles.sort(function(a, b){
       let aName = a.getName().toUpperCase();
       let bName = b.getName().toUpperCase();
       return aName.localeCompare(bName);
@@ -122,21 +131,20 @@ const Workspace = ( () => {
       return audioFileId;
   }
 
-  // Gets the text of the document body (not the header or footer)
+  // Gets the text of the document body (not the header or footer).
   function _getDocText(docId) { 
-    var doc = DocumentApp.openById(docId);
-    var body = doc.getBody();
-    var paragraphs = body.getParagraphs();
+    const doc = DocumentApp.openById(docId);
+    const paragraphs = doc.getBody().getParagraphs();
     var docText = "";
     paragraphs.forEach(paragraph => {
-      docText += " " + paragraph.getText();
+      docText += ` ${paragraph.getText()}`;
     });
 
     Helper.log(docText, Helper.LOG_LEVEL.DEBUG);
     return docText;
   }
 
-  // Gets the folder second to the top
+  // Gets the folder second to the top.
   function _getTopFolder(fileId) {
     let folder = DriveApp.getFileById(fileId).getParents().next();
     // If it's not the root folder or a child of the root folder, recurse up the folder tree
@@ -152,7 +160,7 @@ const Workspace = ( () => {
   }
 
 return {
-      generateMP3ForDocs,
+      getFiles,
       generateMP3ForDoc,
   };
 })();
