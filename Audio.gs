@@ -7,6 +7,7 @@ const Audio = ( () => {
     var audioContents = [];
     requests.forEach(
       request => {
+        Helper.log(`getMP3Blob\n ${request}`, Helper.LOG_LEVEL.DEBUG);
         const audioContent = _getAudioContent(request);
         audioContents.push(audioContent);
         }
@@ -34,19 +35,46 @@ const Audio = ( () => {
   // Returns an array of strings split from the input text so that it falls within Google's quota for
   // text that can be synthesized into speech within a single call. The outbound strings will be whole words
   // so they can easily be combined to create a final audio.
-    function _getSSMLRequests(text) {
-      let body = _getSSMLBody(text);
-      let bodies = _getSSMLRequestBodies(body);
-      let requests = [];
-      bodies.forEach((requestBody, i) => {
-        // Pause at the end of the audio
-        let finalBreak = (i === (bodies.length -1)) ? '<break time="5s"/>' : ''; 
-        let request = `<speak>${requestBody}${finalBreak}</speak>`;
-        requests.push(request);
-        Helper.log(`_getSSMLRequests length: ${request.length} request: ${request}`, Helper.LOG_LEVEL.DEBUG);
-        });
+  // Returns an array of strings split from the input text so that it falls within Google's quota for
+  // text that can be synthesized into speech within a single call. The outbound strings will be whole words
+  // so they can easily be combined to create a final audio.
+  function _getSSMLRequests(text) {
+    // Google quota for max characters per text-to-speech request. See:
+    // https://cloud.google.com/text-to-speech/quotas
+    const TTS_QUOTA = 5000;
+    // Limit each text to less than the quota so there is ample space to surrounding SSML tags.
+    // Define this limit here rather than calculating to simplify program logic.
+    const MAX_LENGTH = TTS_QUOTA - 50;
 
-      return requests;
+    let texts = [];
+    var startIndex = 0;
+    var endIndex = 0;
+    
+    while (endIndex < text.length) {
+      endIndex = startIndex + MAX_LENGTH;
+
+      // Get the largest possible string that includes a whole word and no incomplete SSML tags.
+      // Loop back through the string until finding a space character to terminate that
+      // string upon.
+      let subText = text.substring(startIndex, endIndex);
+      
+      // Handle for complete sentences.
+      for(var i = subText.length; i > 0; i--) {
+        if (subText.charAt(i) === "." || subText.charAt(i) === "?" || subText.charAt(i) === "!") {
+            endIndex = i + startIndex + 1;
+            break;
+        }
+      }
+      let ssml = text.substring(startIndex, endIndex);
+      let startTag = (ssml.substring(startIndex, "<speak>".length) === "<speak>") ? "" : "<speak>"; 
+      let endTag = (ssml.substring(ssml.length - "</speak>".length, ssml.length) === "</speak>") ? "" : "</speak>"; 
+
+      Helper.log(`_getSSMLRequests startTag: ${startTag}; ssml: ${ssml}; endTag: ${endTag}`, Helper.LOG_LEVEL.DEBUG);
+      texts.push(`${startTag}${ssml}${endTag}`);
+      startIndex = endIndex;
+    }
+    
+    return texts;
   }
 
   // Returns the audio content generated from the input text.
@@ -92,59 +120,6 @@ const Audio = ( () => {
     const speechData = JSON.parse(data);
 
     return speechData.audioContent;
-  }
-  // Transform inbound text for audio output via SSML.
-  function _getSSMLBody(text) {
-    // Manipulate various components of the text with SSML tags. See:
-    // https://javascript.info/regexp-lookahead-lookbehind
-    var response = text.replace(/(?!\w)\.(?=\s+\w)/g, '. <break time="2s"/>'); // Pause between sentences      
-    return response;
-  }
-
-  // Returns an array of strings split from the input text so that it falls within Google's quota for
-  // text that can be synthesized into speech within a single call. The outbound strings will be whole words
-  // so they can easily be combined to create a final audio.
-  function _getSSMLRequestBodies(text) {
-    // Google quota for max characters per text-to-speech request. See:
-    // https://cloud.google.com/text-to-speech/quotas
-    const TTS_QUOTA = 5000;
-    // Limit each text to less than the quota so there is ample space to surrounding SSML tags.
-    // Define this limit here rather than calculating to simplify program logic.
-    const MAX_LENGTH = TTS_QUOTA - 100;
-
-    let texts = [];
-    var startIndex = 0;
-    var endIndex = 0;
-    
-    while (endIndex < text.length) {
-      endIndex = startIndex + MAX_LENGTH;
-
-      // Get the largest possible string that includes a whole word and no incomplete SSML tags.
-      // Loop back through the string until finding a space character to terminate that
-      // string upon.
-      let subText = text.substring(startIndex, endIndex);
-      
-      // Handle for complete words or SSML tags
-      for(var i = subText.length; i > 0; i--) {
-        if (subText.charAt(i) === ">") {
-          endIndex = i + startIndex;
-          break;
-        }
-
-        if (subText.charAt(i) === " ") {
-          let rightAngleIndex = subText.substring(0, i).lastIndexOf(">"); 
-          let leftAngleIndex = subText.substring(0, i).lastIndexOf("<");
-          if (leftAngleIndex > rightAngleIndex) { continue; } else {
-            endIndex = i + startIndex;
-            break;
-          }
-        }
-      }
-      texts.push(text.substring(startIndex, endIndex));
-      startIndex = endIndex;
-    }
-    
-    return texts;
   }
 
   // Wrapper handling ID3 logic within file.

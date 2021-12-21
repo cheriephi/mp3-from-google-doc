@@ -8,12 +8,12 @@
 // This logic has some custom configuration, such as wrapping text in SSML tags with specified wait times between questions,
 // but may be useful for any kind of text-to-speech logic, especially from Google Apps Script working with Google Docs.
 
-
 // Main method. Executes a Google Drive search criteria to find Google Doc files and generates MP3 audio files
 // using Text-To-Speech. Will delete the previous MP3 file if it exists.
 function generate() {
   // https://developers.google.com/drive/api/v3/search-files
   const query = "modifiedDate > '2021-12-10T12:00:00'"; // title contains = not modifiedDate > '2021-12-10T12:00:00'
+
   const requireMatchingAudio = true; // Only generate audios for documents that already have audios.
   const forceRegenerate = true; // Generate audios even if they are newer than the corresponding document.
 
@@ -22,7 +22,10 @@ function generate() {
   var startIndex = stateManager.getStartIndex();
   files.forEach((file, index) => {
       // If resuming from incomplete run, continue until coming to current state.
-      if (index < startIndex ) { return; }
+      if (index < startIndex ) {
+        Helper.log(`generate skipping file: ${file.getName()}; index: ${index} because the previous run stopped at index ${startIndex}`, Helper.LOG_LEVEL.DEBUG); 
+        return; 
+      }
       Helper.log(`Generating MP3 for ${file.getName()}`);
       Workspace.generateMP3ForDoc(file.getId());
       stateManager.incrementStartIndex();
@@ -34,8 +37,8 @@ const Workspace = ( () => {
   // Returns the list of files to process based on the input criteria.
   function getFiles(query, requireMatchingAudio, forceRegenerate) {
     const typeQuery = "mimeType = 'application/vnd.google-apps.document'";
-    const docQuery = (query.length > 0) ? `${typeQuery} and ${query}` : typeQuery;
-    Helper.log(`getFiles docQuery ${docQuery}`, Helper.LOG_LEVEL.DEBUG);
+    const docQuery = (query != undefined && query.length > 0) ? `${typeQuery} and ${query}` : typeQuery;
+    Helper.log(`getFiles docQuery: ${docQuery}`, Helper.LOG_LEVEL.DEBUG);
 
     // Execute the search filter the results.
     // Determine if the file matches the additional search criteria:
@@ -70,9 +73,9 @@ const Workspace = ( () => {
 
   // Create an audio file from the input document.
   function generateMP3ForDoc(docFileId) {
-    const text = _getDocText(docFileId);
     const docFile = DriveApp.getFileById(docFileId);
-
+    const text = getGoogleDocSSML(DocumentApp.openById(docFileId), Helper.SSMLConfig);
+  
     const audioFileName = `${docFile.getName()}.mp3`;
     // Define the audio file metadata
     const metadata = {
@@ -129,19 +132,6 @@ const Workspace = ( () => {
       }
 
       return audioFileId;
-  }
-
-  // Gets the text of the document body (not the header or footer).
-  function _getDocText(docId) { 
-    const doc = DocumentApp.openById(docId);
-    const paragraphs = doc.getBody().getParagraphs();
-    var docText = "";
-    paragraphs.forEach(paragraph => {
-      docText += ` ${paragraph.getText()}`;
-    });
-
-    Helper.log(docText, Helper.LOG_LEVEL.DEBUG);
-    return docText;
   }
 
   // Gets the folder second to the top.
