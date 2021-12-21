@@ -6,6 +6,9 @@
 // https://developers.google.com/apps-script/reference/document/paragraph
 function getGoogleDocSSML(doc, options) { 
 
+  if (options === undefined) { options = new Object(); };
+  if (options.pauseInMillisecondsAfter === undefined) { options.pauseInMillisecondsAfter = new Object(); };
+
   const filePause      = (options.pauseInMillisecondsAfter.file != undefined)      ? `<break time="${options.pauseInMillisecondsAfter.file}ms"/>`      : "" ;
   const paragraphPause = (options.pauseInMillisecondsAfter.paragraph != undefined) ? `<break time="${options.pauseInMillisecondsAfter.paragraph}ms"/>` : "" ;
   const bulletPause    = (options.pauseInMillisecondsAfter.bullet != undefined)    ? `<break time="${options.pauseInMillisecondsAfter.bullet}ms"/>`    : "" ;
@@ -47,17 +50,17 @@ function getGoogleDocSSML(doc, options) {
 
     const paragraphText = `${boldStartTag}${paragraph.getText()}${boldEndTag}${paragraphBulletPause}`;
 
-    Helper.log(`getGoogleDocSSML paragraphText: ${paragraphText}`, Helper.LOG_LEVEL.DEBUG);
+    console.log(`getGoogleDocSSML paragraphText: ${paragraphText}`, console.LOG_LEVEL.DEBUG);
     docText += paragraphText;
   });
 
   // Apply markup for text elements
   Object.keys(replaceTexts).forEach(key => {
     docText = docText.replace(new RegExp(key, "g"), replaceTexts[key]);
-    Helper.log(`getGoogleDocSSML replaceTexts key: '${key}'; '${replaceTexts[key]}'`, Helper.LOG_LEVEL.DEBUG);
+    console.log(`replaceTexts key: '${key}'; '${replaceTexts[key]}'`, console.LOG_LEVEL.DEBUG);
   });
 
   docText = `<speak>${docText}${filePause}</speak>`;
-  Helper.log(`getGoogleDocSSML docText: ${docText}`, Helper.LOG_LEVEL.DEBUG);
+  console.log(`docText: ${docText}`, console.LOG_LEVEL.DEBUG);
   return docText;
 }

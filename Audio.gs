@@ -7,7 +7,7 @@ const Audio = ( () => {
     var audioContents = [];
     requests.forEach(
       request => {
-        Helper.log(`getMP3Blob\n ${request}`, Helper.LOG_LEVEL.DEBUG);
+        console.log(`${request}`, console.LOG_LEVEL.DEBUG);
         const audioContent = _getAudioContent(request);
         audioContents.push(audioContent);
         }
@@ -28,7 +28,7 @@ const Audio = ( () => {
     const bytes = Utilities.base64Decode(data, Utilities.Charset.UTF_8);
     
     const blob = Tagger.getTaggedBlob(bytes, audioFileName, metadata);
-    Helper.log(`Tagger.getBlob bytes ${bytes.length}`, Helper.LOG_LEVEL.DEBUG);
+    console.log(`bytes ${bytes.length}`, console.LOG_LEVEL.DEBUG);
     return blob;
   }
   // Returns SSML tagged text for speech processing using custom logic.
@@ -65,11 +65,14 @@ const Audio = ( () => {
             break;
         }
       }
-      let ssml = text.substring(startIndex, endIndex);
-      let startTag = (ssml.substring(startIndex, "<speak>".length) === "<speak>") ? "" : "<speak>"; 
-      let endTag = (ssml.substring(ssml.length - "</speak>".length, ssml.length) === "</speak>") ? "" : "</speak>"; 
+      var ssml = text.substring(startIndex, endIndex);
+      let startTag = (ssml.substring(startIndex, "<speak>".length) === "<speak>") ? "" : "<speak>";
+      var endTag = "</speak>"; 
+      if (ssml.substring(ssml.length - "</speak>".length, ssml.length) === "</speak>") {
+        ssml = ssml.substring(ssml - "</speak>".length)
+      }
 
-      Helper.log(`_getSSMLRequests startTag: ${startTag}; ssml: ${ssml}; endTag: ${endTag}`, Helper.LOG_LEVEL.DEBUG);
+      console.log(`startTag: ${startTag}; ssml: '${ssml}'; endTag: ${endTag}`, console.LOG_LEVEL.DEBUG);
       texts.push(`${startTag}${ssml}${endTag}`);
       startIndex = endIndex;
     }
@@ -90,7 +93,7 @@ const Audio = ( () => {
         },
     };
 
-    // Construct the audio configuration from the Helper settings and the input parameters.
+    // Construct the audio configuration from the settings and the input parameters.
     const json = Object.assign({}, Helper.AudioConfig, Input);
     const payload = JSON.stringify(json);
     // Call Text-to-Speech API. See
@@ -113,8 +116,8 @@ const Audio = ( () => {
     // https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app
     const data = UrlFetchApp.fetch(url, options);
     if (data.getResponseCode() != 200) {
-      Helper.log(`UrlFetchApp code: ${data.getResponseCode()}`, Helper.LOG_LEVEL.ERROR);
-      Helper.log(`UrlFetchApp text: ${data.getContentText()}`, Helper.LOG_LEVEL.ERROR);
+      console.log(`UrlFetchApp code: ${data.getResponseCode()}`, console.LOG_LEVEL.ERROR);
+      console.log(`UrlFetchApp text: ${data.getContentText()}`, console.LOG_LEVEL.ERROR);
       throw new Error('UrlFetchApp error');
     }
     const speechData = JSON.parse(data);
@@ -126,7 +129,7 @@ const Audio = ( () => {
   const Tagger = ( () => {
     function getTaggedBlob(bytes, audioFileName, metadata) {
       let buffer = getArrayBuffer(bytes);
-      Helper.log(`Metadata: ${metadata}; Bytes: ${buffer.byteLength}`, Helper.LOG_LEVEL.DEBUG);
+      console.log(`Metadata: ${metadata}; Bytes: ${buffer.byteLength}`, console.LOG_LEVEL.DEBUG);
       const writer = new ID3Writer(buffer);
       writer.removeTag();
 

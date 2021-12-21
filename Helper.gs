@@ -1,17 +1,4 @@
 const Helper = ( () => {
-  const LOG_LEVEL = {
-    ERROR: 0,
-    INFO: 1,
-    DEBUG: 2
-  };
-
-  const currentLogLevel = LOG_LEVEL.DEBUG;
-  const log = (msg, logLevel) => {
-    if (logLevel === undefined) { logLevel = 0 };
-    
-    if (logLevel <= currentLogLevel) console.log(msg);
-    }
-
   // Audio settings for Google Text-to-Speech API. See:
   // https://cloud.google.com/text-to-speech/docs/reference/rest/v1beta1/text/synthesize
   // The input settings will be configured within the application logic.
@@ -46,8 +33,6 @@ const Helper = ( () => {
   };
  
   return {
-    LOG_LEVEL,
-    log,
     AudioConfig,
     SSMLConfig,
   };

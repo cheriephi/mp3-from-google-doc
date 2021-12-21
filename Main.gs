@@ -23,10 +23,10 @@ function generate() {
   files.forEach((file, index) => {
       // If resuming from incomplete run, continue until coming to current state.
       if (index < startIndex ) {
-        Helper.log(`generate skipping file: ${file.getName()}; index: ${index} because the previous run stopped at index ${startIndex}`, Helper.LOG_LEVEL.DEBUG); 
+        console.log(`generate skipping file: ${file.getName()}; index: ${index} because the previous run stopped at index ${startIndex}`, console.LOG_LEVEL.DEBUG); 
         return; 
       }
-      Helper.log(`Generating MP3 for ${file.getName()}`);
+      console.log(`Generating MP3 for ${file.getName()}`);
       Workspace.generateMP3ForDoc(file.getId());
       stateManager.incrementStartIndex();
   });
@@ -38,7 +38,7 @@ const Workspace = ( () => {
   function getFiles(query, requireMatchingAudio, forceRegenerate) {
     const typeQuery = "mimeType = 'application/vnd.google-apps.document'";
     const docQuery = (query != undefined && query.length > 0) ? `${typeQuery} and ${query}` : typeQuery;
-    Helper.log(`getFiles docQuery: ${docQuery}`, Helper.LOG_LEVEL.DEBUG);
+    console.log(`docQuery: ${docQuery}`, console.LOG_LEVEL.DEBUG);
 
     // Execute the search filter the results.
     // Determine if the file matches the additional search criteria:
@@ -51,18 +51,18 @@ const Workspace = ( () => {
 
       // Check for files without folders, this might be for shared files. We don't care about those.
       if (_getFolder(file.getId())=== undefined) {
-        Helper.log(`generateMP3ForDocs file: ${file.getName()} does not have a folder, skipping`, Helper.LOG_LEVEL.DEBUG);
+        console.log(`file: ${file.getName()} does not have a folder, skipping`, console.LOG_LEVEL.DEBUG);
         continue; 
       }
 
       if (requireMatchingAudio) {
         let audioFileId = _getAudioFileId(file.getId());
-        Helper.log(`generateMP3ForDocs audioFile found: ${!(audioFileId === null)}`, Helper.LOG_LEVEL.DEBUG)
+        console.log(`audioFile found: ${!(audioFileId === null)}`, console.LOG_LEVEL.DEBUG)
         if (audioFileId == null) continue;
 
         let fileLastUpdated = file.getLastUpdated();
         let audioFileLastUpdated = DriveApp.getFileById(audioFileId).getLastUpdated();
-        Helper.log(`generateMP3ForDocs forceRegenerate: ${forceRegenerate}; fileLastUpdated: ${fileLastUpdated}; audioFileLastUpdated: ${audioFileLastUpdated};`, Helper.LOG_LEVEL.DEBUG)
+        console.log(`forceRegenerate: ${forceRegenerate}; fileLastUpdated: ${fileLastUpdated.toISOString()}; audioFileLastUpdated: ${audioFileLastUpdated.toISOString()};`, console.LOG_LEVEL.DEBUG)
         if (!forceRegenerate && file.getLastUpdated() < audioFileLastUpdated) break;
       }
 
@@ -124,7 +124,7 @@ const Workspace = ( () => {
       const folder = _getFolder(docFile.getId());
       const folderId = folder.getId();
       const audioQuery = `title = '${escapedFileName}.mp3' and mimeType = 'audio/mpeg' and '${folderId}' in parents`; 
-      Helper.log(`generateMP3ForDocs audioQuery: ${audioQuery}`, Helper.LOG_LEVEL.DEBUG)
+      console.log(`audioQuery: ${audioQuery}`, console.LOG_LEVEL.DEBUG)
       var audioFiles = DriveApp.searchFiles(audioQuery);
 
       while (audioFiles.hasNext()) {
@@ -141,11 +141,11 @@ const Workspace = ( () => {
     while (folder.getParents().hasNext() 
         && folder.getParents().next().getParents().hasNext()
         && folder.getParents().next().getParents().next().getParents().hasNext()) {
-      Helper.log(`getTopFolder folder name: ${folder.getName()} ; folder id: ${folder.getId()}`, Helper.LOG_LEVEL.DEBUG);
+      console.log(`folder name: ${folder.getName()} ; folder id: ${folder.getId()}`, console.LOG_LEVEL.DEBUG);
       folder = folder.getParents().next();
     }
 
-    Helper.log(`getTopFolder fileId: ${fileId}; return folder name: ${folder.getName()}; folder id: ${folder.getId()}`, Helper.LOG_LEVEL.DEBUG);
+    console.log(`fileId: ${fileId}; return folder name: ${folder.getName()}; folder id: ${folder.getId()}`, console.LOG_LEVEL.DEBUG);
     return folder;
   }
 

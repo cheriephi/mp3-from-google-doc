@@ -11,17 +11,18 @@
       startIndex = parseInt(0);
       this.scriptProperties.setProperty( {startIndex: startIndex} );
     };
-    Helper.log(`getStartIndex startIndex: ${startIndex}`, Helper.LOG_LEVEL.DEBUG);
+    console.log(`startIndex: ${startIndex}`, console.LOG_LEVEL.DEBUG);
     return startIndex;
   }
 
   incrementStartIndex() {
     var startIndex = this.scriptProperties.getProperty('startIndex');
     this.scriptProperties.setProperty('startIndex', parseInt(startIndex) + parseInt(1));
-    Helper.log(`incrementStartIndex startIndex: ${this.scriptProperties.getProperty('startIndex')}`, Helper.LOG_LEVEL.DEBUG);
+    console.log(`startIndex: ${this.scriptProperties.getProperty('startIndex')}`, console.LOG_LEVEL.DEBUG);
   }
 
   resetState() {
     this.scriptProperties.setProperty('startIndex', parseInt(0));
+    console.log(`Resetting.`, console.LOG_LEVEL.DEBUG);
   }
 }
