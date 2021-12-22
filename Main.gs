@@ -7,17 +7,10 @@
 
 // This logic has some custom configuration, such as wrapping text in SSML tags with specified wait times between questions,
 // but may be useful for any kind of text-to-speech logic, especially from Google Apps Script working with Google Docs.
-
 // Main method. Executes a Google Drive search criteria to find Google Doc files and generates MP3 audio files
 // using Text-To-Speech. Will delete the previous MP3 file if it exists.
 function generate() {
-  // https://developers.google.com/drive/api/v3/search-files
-  const query = "modifiedDate > '2021-12-10T12:00:00'"; // title contains = not modifiedDate > '2021-12-10T12:00:00'
-
-  const requireMatchingAudio = true; // Only generate audios for documents that already have audios.
-  const forceRegenerate = true; // Generate audios even if they are newer than the corresponding document.
-
-  const files = Workspace.getFiles(query, requireMatchingAudio, forceRegenerate);
+  const files = Workspace.getFiles(Config.query, Config.requireMatchingAudio, Config.forceRegenerate);
   var stateManager = new StateManager();
   var startIndex = stateManager.getStartIndex();
   files.forEach((file, index) => {
@@ -74,7 +67,7 @@ const Workspace = ( () => {
   // Create an audio file from the input document.
   function generateMP3ForDoc(docFileId) {
     const docFile = DriveApp.getFileById(docFileId);
-    const text = getGoogleDocSSML(DocumentApp.openById(docFileId), Helper.SSMLConfig);
+    const text = getGoogleDocSSML(DocumentApp.openById(docFileId), Config.SSMLConfig);
   
     const audioFileName = `${docFile.getName()}.mp3`;
     // Define the audio file metadata

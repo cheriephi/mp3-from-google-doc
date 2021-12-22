@@ -94,7 +94,7 @@ const Audio = ( () => {
     };
 
     // Construct the audio configuration from the settings and the input parameters.
-    const json = Object.assign({}, Helper.AudioConfig, Input);
+    const json = Object.assign({}, Config.AudioConfig, Input);
     const payload = JSON.stringify(json);
     // Call Text-to-Speech API. See
     // https://cloud.google.com/text-to-speech/docs/reference/rest/v1beta1/text/synthesize

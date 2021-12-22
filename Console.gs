@@ -8,7 +8,8 @@ var console = ( (oldConsole) => {
     DEBUG: 2
   };
 
-  const currentLogLevel = LOG_LEVEL.INFO;
+  currentLogLevel = LOG_LEVEL.INFO;
+
    // https://stackoverflow.com/questions/38435450/get-current-function-name-in-strict-mode
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Stack
   // Non-standard code.
