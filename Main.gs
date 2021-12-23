@@ -16,10 +16,10 @@ function generate() {
   files.forEach((file, index) => {
       // If resuming from incomplete run, continue until coming to current state.
       if (index < startIndex ) {
-        console.log(`generate skipping file: ${file.getName()}; index: ${index} because the previous run stopped at index ${startIndex}`, console.LOG_LEVEL.DEBUG); 
+        console.log(`generate skipping file: ${file.getName()}; index: ${index} because the previous run stopped at index ${startIndex}`); 
         return; 
       }
-      console.log(`Generating MP3 for ${file.getName()}`);
+      console.info(`Generating MP3 for ${file.getName()}`);
       Workspace.generateMP3ForDoc(file.getId());
       stateManager.incrementStartIndex();
   });
@@ -31,7 +31,7 @@ const Workspace = ( () => {
   function getFiles(query, requireMatchingAudio, forceRegenerate) {
     const typeQuery = "mimeType = 'application/vnd.google-apps.document'";
     const docQuery = (query != undefined && query.length > 0) ? `${typeQuery} and ${query}` : typeQuery;
-    console.log(`docQuery: ${docQuery}`, console.LOG_LEVEL.DEBUG);
+    console.log(`docQuery: ${docQuery}`);
 
     // Execute the search filter the results.
     // Determine if the file matches the additional search criteria:
@@ -44,18 +44,18 @@ const Workspace = ( () => {
 
       // Check for files without folders, this might be for shared files. We don't care about those.
       if (_getFolder(file.getId())=== undefined) {
-        console.log(`file: ${file.getName()} does not have a folder, skipping`, console.LOG_LEVEL.DEBUG);
+        console.log(`file: ${file.getName()} does not have a folder, skipping`);
         continue; 
       }
 
       if (requireMatchingAudio) {
         let audioFileId = _getAudioFileId(file.getId());
-        console.log(`audioFile found: ${!(audioFileId === null)}`, console.LOG_LEVEL.DEBUG)
+        console.log(`audioFile found: ${!(audioFileId === null)}`)
         if (audioFileId == null) continue;
 
         let fileLastUpdated = file.getLastUpdated();
         let audioFileLastUpdated = DriveApp.getFileById(audioFileId).getLastUpdated();
-        console.log(`forceRegenerate: ${forceRegenerate}; fileLastUpdated: ${fileLastUpdated.toISOString()}; audioFileLastUpdated: ${audioFileLastUpdated.toISOString()};`, console.LOG_LEVEL.DEBUG)
+        console.log(`forceRegenerate: ${forceRegenerate}; fileLastUpdated: ${fileLastUpdated.toISOString()}; audioFileLastUpdated: ${audioFileLastUpdated.toISOString()};`)
         if (!forceRegenerate && file.getLastUpdated() < audioFileLastUpdated) break;
       }
 
@@ -117,7 +117,7 @@ const Workspace = ( () => {
       const folder = _getFolder(docFile.getId());
       const folderId = folder.getId();
       const audioQuery = `title = '${escapedFileName}.mp3' and mimeType = 'audio/mpeg' and '${folderId}' in parents`; 
-      console.log(`audioQuery: ${audioQuery}`, console.LOG_LEVEL.DEBUG)
+      console.log(`audioQuery: ${audioQuery}`)
       var audioFiles = DriveApp.searchFiles(audioQuery);
 
       while (audioFiles.hasNext()) {
@@ -134,11 +134,11 @@ const Workspace = ( () => {
     while (folder.getParents().hasNext() 
         && folder.getParents().next().getParents().hasNext()
         && folder.getParents().next().getParents().next().getParents().hasNext()) {
-      console.log(`folder name: ${folder.getName()} ; folder id: ${folder.getId()}`, console.LOG_LEVEL.DEBUG);
+      console.log(`folder name: ${folder.getName()} ; folder id: ${folder.getId()}`);
       folder = folder.getParents().next();
     }
 
-    console.log(`fileId: ${fileId}; return folder name: ${folder.getName()}; folder id: ${folder.getId()}`, console.LOG_LEVEL.DEBUG);
+    console.log(`fileId: ${fileId}; return folder name: ${folder.getName()}; folder id: ${folder.getId()}`);
     return folder;
   }
 

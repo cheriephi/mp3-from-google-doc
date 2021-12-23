@@ -116,8 +116,8 @@ const Audio = ( () => {
     // https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app
     const data = UrlFetchApp.fetch(url, options);
     if (data.getResponseCode() != 200) {
-      console.log(`UrlFetchApp code: ${data.getResponseCode()}`, console.LOG_LEVEL.ERROR);
-      console.log(`UrlFetchApp text: ${data.getContentText()}`, console.LOG_LEVEL.ERROR);
+      console.error(`UrlFetchApp code: ${data.getResponseCode()}`);
+      console.error(`UrlFetchApp text: ${data.getContentText()}`);
       throw new Error('UrlFetchApp error');
     }
     const speechData = JSON.parse(data);
@@ -129,7 +129,7 @@ const Audio = ( () => {
   const Tagger = ( () => {
     function getTaggedBlob(bytes, audioFileName, metadata) {
       let buffer = getArrayBuffer(bytes);
-      console.log(`Metadata: ${metadata}; Bytes: ${buffer.byteLength}`, console.LOG_LEVEL.DEBUG);
+      console.log(`Metadata: ${metadata}; Bytes: ${buffer.byteLength}`);
       const writer = new ID3Writer(buffer);
       writer.removeTag();
 

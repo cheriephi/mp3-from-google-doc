@@ -50,17 +50,17 @@ function getGoogleDocSSML(doc, options) {
 
     const paragraphText = `${boldStartTag}${paragraph.getText()}${boldEndTag}${paragraphBulletPause}`;
 
-    console.log(`getGoogleDocSSML paragraphText: ${paragraphText}`, console.LOG_LEVEL.DEBUG);
+    console.log(`getGoogleDocSSML paragraphText: ${paragraphText}`);
     docText += paragraphText;
   });
 
   // Apply markup for text elements
   Object.keys(replaceTexts).forEach(key => {
     docText = docText.replace(new RegExp(key, "g"), replaceTexts[key]);
-    console.log(`replaceTexts key: '${key}'; '${replaceTexts[key]}'`, console.LOG_LEVEL.DEBUG);
+    console.log(`replaceTexts key: '${key}'; '${replaceTexts[key]}'`);
   });
 
   docText = `<speak>${docText}${filePause}</speak>`;
-  console.log(`docText: ${docText}`, console.LOG_LEVEL.DEBUG);
+  console.log(`docText: ${docText}`);
   return docText;
 }
