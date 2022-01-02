@@ -42,40 +42,46 @@ const Audio = ( () => {
     // Google quota for max characters per text-to-speech request. See:
     // https://cloud.google.com/text-to-speech/quotas
     const TTS_QUOTA = 5000;
+    const TAG_SPACE = 50;
     // Limit each text to less than the quota so there is ample space to surrounding SSML tags.
     // Define this limit here rather than calculating to simplify program logic.
-    const MAX_LENGTH = TTS_QUOTA - 50;
+    const MAX_LENGTH = TTS_QUOTA - TAG_SPACE;
 
     let texts = [];
     var startIndex = 0;
     var endIndex = 0;
     
-    while (endIndex < text.length) {
+    do {
       endIndex = startIndex + MAX_LENGTH;
 
-      // Get the largest possible string that includes a whole word and no incomplete SSML tags.
-      // Loop back through the string until finding a space character to terminate that
-      // string upon.
-      let subText = text.substring(startIndex, endIndex);
-      
-      // Handle for complete sentences.
-      for(var i = subText.length; i > 0; i--) {
-        if (subText.charAt(i) === "." || subText.charAt(i) === "?" || subText.charAt(i) === "!") {
-            endIndex = i + startIndex + 1;
-            break;
+      var ssml = text;
+      // If the text has to be split, work out how to do it elegantly.
+      if (text.length + TAG_SPACE > TTS_QUOTA) {
+        // Get the largest possible string that includes a whole word and no incomplete SSML tags.
+        // Loop back through the string until finding a space character to terminate that
+        // string upon.
+        let subText = text.substring(startIndex, endIndex);
+        console.log(`ssml: '${ssml}'; startIndex: ${startIndex}; endIndex: ${endIndex}; text.length: ${text.length}`);
+
+        // Handle for complete sentences.
+        for(var i = subText.length; i > 0; i--) {
+          if (subText.charAt(i) === "." || subText.charAt(i) === "?" || subText.charAt(i) === "!") {
+              endIndex = i + startIndex + 1;
+              break;
+          }
         }
+        ssml = text.substring(startIndex, endIndex);
       }
-      var ssml = text.substring(startIndex, endIndex);
       let startTag = (ssml.substring(startIndex, "<speak>".length) === "<speak>") ? "" : "<speak>";
       var endTag = "</speak>"; 
       if (ssml.substring(ssml.length - "</speak>".length, ssml.length) === "</speak>") {
         ssml = ssml.substring(ssml - "</speak>".length)
       }
 
-      console.log(`startTag: ${startTag}; ssml: '${ssml}'; endTag: ${endTag}`, console.LOG_LEVEL.DEBUG);
+      console.log(`startTag: ${startTag}; ssml: '${ssml}'; endTag: ${endTag}; endIndex: ${endIndex}; text.length: ${text.length}`);
       texts.push(`${startTag}${ssml}${endTag}`);
       startIndex = endIndex;
-    }
+    } while (endIndex < text.length)
     
     return texts;
   }
