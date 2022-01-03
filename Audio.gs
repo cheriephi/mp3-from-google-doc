@@ -7,7 +7,7 @@ const Audio = ( () => {
     var audioContents = [];
     requests.forEach(
       request => {
-        console.log(`${request}`, console.LOG_LEVEL.DEBUG);
+        console.log(`request: ${request}`, console.LOG_LEVEL.DEBUG);
         const audioContent = _getAudioContent(request);
         audioContents.push(audioContent);
         }
@@ -28,7 +28,7 @@ const Audio = ( () => {
     const bytes = Utilities.base64Decode(data, Utilities.Charset.UTF_8);
     
     const blob = Tagger.getTaggedBlob(bytes, audioFileName, metadata);
-    console.log(`bytes ${bytes.length}`, console.LOG_LEVEL.DEBUG);
+    console.log(`Bytes: ${bytes.length}`, console.LOG_LEVEL.DEBUG);
     return blob;
   }
   // Returns SSML tagged text for speech processing using custom logic.
@@ -72,13 +72,12 @@ const Audio = ( () => {
         }
         ssml = text.substring(startIndex, endIndex);
       }
+      // Add start and end SSML tags if needed.
       let startTag = (ssml.substring(startIndex, "<speak>".length) === "<speak>") ? "" : "<speak>";
-      var endTag = "</speak>"; 
-      if (ssml.substring(ssml.length - "</speak>".length, ssml.length) === "</speak>") {
-        ssml = ssml.substring(ssml - "</speak>".length)
-      }
+      var endSSML = ssml.substring(ssml.length - "</speak>".length); 
+      let endTag = (endSSML === "</speak>") ? "" : "</speak>";
 
-      console.log(`startTag: ${startTag}; ssml: '${ssml}'; endTag: ${endTag}; endIndex: ${endIndex}; text.length: ${text.length}`);
+      console.log(`endSSML: '${endSSML}'; startTag: '${startTag}'; ssml: '${ssml}'; endTag: '${endTag}'; endIndex: ${endIndex}; text.length: ${text.length}`);
       texts.push(`${startTag}${ssml}${endTag}`);
       startIndex = endIndex;
     } while (endIndex < text.length)
@@ -135,7 +134,7 @@ const Audio = ( () => {
   const Tagger = ( () => {
     function getTaggedBlob(bytes, audioFileName, metadata) {
       let buffer = getArrayBuffer(bytes);
-      console.log(`Metadata: ${metadata}; Bytes: ${buffer.byteLength}`);
+      console.log(`Metadata: ${Object.entries(metadata)}; Bytes: ${buffer.byteLength}`);
       const writer = new ID3Writer(buffer);
       writer.removeTag();
 
