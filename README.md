@@ -17,6 +17,8 @@ Show the appsscript.json manifest in the editor so that you can add the followin
     "https://www.googleapis.com/auth/documents"
   ]
 
+Enable Google Advanced Services in the Project's services setting.
+
 ## Installation
 Paste this code into Google Apps Script.
 

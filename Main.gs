@@ -82,12 +82,14 @@ const Workspace = ( () => {
 
     const blob = Audio.getMP3Blob(text, audioFileName, metadata);
 
-    // Delete previous audio file if it exists.
+     // Update previous audio file if it exists.
     var audioFileId = _getAudioFileId(docFileId);
-    if (audioFileId != null) {DriveApp.getFileById(audioFileId).setTrashed(true)};
-
-    // Create new audio file
-    DriveApp.getFolderById(_getFolder(docFileId).getId()).createFile(blob);
+    if (audioFileId != null) {
+      Drive.Files.update(null, audioFileId, blob);
+    } else {
+      // Create new audio file
+      DriveApp.getFolderById(_getFolder(docFileId).getId()).createFile(blob);
+    }
   }
 
   function _getFolder(fileId) {
