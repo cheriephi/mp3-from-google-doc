@@ -9,14 +9,7 @@ The Google Drive and Google Docs APIs should also be enabled on the project.
 An OAuth 2.0 client ID should be set up for Google Apps Script.
 
 You also need a Google Apps Script project which is configured to point to the Google Cloud Project.
-Show the appsscript.json manifest in the editor so that you can add the following:
-  "oauthScopes": [
-    "https://www.googleapis.com/auth/cloud-platform",
-    "https://www.googleapis.com/auth/script.external_request",
-    "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/documents"
-  ]
-
+Show the appsscript.json manifest in the editor so can replace it.
 Enable Google Advanced Services in the Project's services setting.
 
 ## Installation
