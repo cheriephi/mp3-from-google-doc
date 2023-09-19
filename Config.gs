@@ -3,13 +3,13 @@ var title = '';
 
 const Config = {
   // https://developers.google.com/drive/api/v3/search-files
-  // not  '1234567' in parents
   // query: "",
   // query: `modifiedDate > '${yesterday}'`,
   query: `title = "${title}"`,
   // query: `title contains "${title}"`,
+  // query: `'1pGGB5tVK7R-LmG-V2yf4QfE0Zn3WbODo' in parents`,
 
-  requireMatchingAudio: false, // Only generate audios for documents that already have audios.
+  requireMatchingAudio: true, // Only generate audios for documents that already have audios.
   forceRegenerate: false, // Generate audios even if they are newer than the corresponding document.
 
   // Audio settings for Google Text-to-Speech API. See:

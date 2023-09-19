@@ -11,12 +11,14 @@
       startIndex = parseInt(0);
       this.scriptProperties.setProperty( {startIndex: startIndex} );
     };
+    startIndex = parseInt(startIndex);
     console.log(`startIndex: ${startIndex}`);
     return startIndex;
   }
 
   incrementStartIndex() {
     var startIndex = this.scriptProperties.getProperty('startIndex');
+      startIndex = parseInt(startIndex);
     this.scriptProperties.setProperty('startIndex', parseInt(startIndex) + parseInt(1));
     console.log(`startIndex: ${this.scriptProperties.getProperty('startIndex')}`);
   }
